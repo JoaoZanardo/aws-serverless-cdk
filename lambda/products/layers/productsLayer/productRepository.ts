@@ -30,11 +30,26 @@ export class ProductRepository {
             }
         }).promise();
 
-        if (!data.Item) {
-            throw new Error('Product not found');
-        }
+        if (!data.Item) throw new Error('Product not found');
 
         return data.Item as Product;
+    }
+
+    async getProductsByIds(productIds: string[]): Promise<Product[]> {
+        const keys: { id: string }[] = [];
+        productIds.forEach(productId => {
+            keys.push({id: productId});
+        });
+
+        const data = await this.ddbClient.batchGet({
+            RequestItems: {
+                [this.productsDdb]: {
+                    Keys: keys
+                }
+            }
+        }).promise();
+
+        return data.Responses![this.productsDdb] as Product[];
     }
 
     async create(product: Product): Promise<Product> {
@@ -57,9 +72,7 @@ export class ProductRepository {
             ReturnValues: 'ALL_OLD'
         }).promise();
 
-        if (!data.Attributes) {
-            throw new Error('Product not found'); 
-        }
+        if (!data.Attributes)  throw new Error('Product not found'); 
 
         return data.Attributes as Product;
     }

@@ -25,10 +25,16 @@
     "baseUrl": "./",
     "paths": {
       "/opt/nodejs/productsLayer": [
-        "lambda/products/layers/productsLayer/productsRepository"
+        "lambda/products/layers/productsLayer/productRepository"
       ],
       "/opt/nodejs/productEventsLayer": [
         "lambda/products/layers/productEventsLayer/productEvent"
+      ],
+      "/opt/nodejs/ordersLayer": [
+        "lambda/orders/layers/ordersLayer/orderRepository"
+      ],
+      "/opt/nodejs/ordersApiLayer": [
+        "lambda/orders/layers/ordersApiLayer/orderApi"
       ]
     }
   },

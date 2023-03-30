@@ -1,7 +1,6 @@
-import { Product } from "../products/layers/productsLayer/productsRepository";
 import { APIGatewayProxyEvent, APIGatewayProxyResult, Context } from "aws-lambda";
 import { DynamoDB, Lambda } from 'aws-sdk';
-import { ProductRepository } from "/opt/nodejs/productsLayer";
+import { ProductRepository, Product } from "/opt/nodejs/productsLayer";
 import * as AWSXRay from 'aws-xray-sdk';
 import { ProductEvent, ProductEventType } from "./layers/productEventsLayer/productEvent";
 
@@ -19,10 +18,10 @@ export async function handler(
     event: APIGatewayProxyEvent,
     context: Context
 ): Promise<APIGatewayProxyResult> {
-     const method = event.httpMethod;
-     const lambdaRequestId = context.awsRequestId;
+    const method = event.httpMethod;
+    const lambdaRequestId = context.awsRequestId;
 
-     if (event.resource === '/products') {
+    if (event.resource === '/products') {
         console.log('POST /products');
 
         const product = JSON.parse(event.body!) as Product;
@@ -40,9 +39,9 @@ export async function handler(
             statusCode: 201,
             body: JSON.stringify(productCreated)
         }
-     }
+    }
 
-     if (event.resource === '/products/{id}') {
+    if (event.resource === '/products/{id}') {
         const productId = event.pathParameters!.id as string;
 
         if (method === 'PUT') {
@@ -104,7 +103,7 @@ export async function handler(
                 }
             }
         }
-     }
+    }
 
     return {
         statusCode: 400,

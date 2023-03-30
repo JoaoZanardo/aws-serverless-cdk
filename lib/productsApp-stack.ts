@@ -10,7 +10,7 @@ export interface ProductsAppStackProps extends cdk.StackProps {
 }
 
 export class ProductsAppStack extends cdk.Stack {
-    readonly productsfetchHandler: lambdaNodeJS.NodejsFunction;
+    readonly productsFetchHandler: lambdaNodeJS.NodejsFunction;
     readonly productsAdminHandler: lambdaNodeJS.NodejsFunction;
     readonly productsDdb: dynamodb.Table;
 
@@ -64,7 +64,7 @@ export class ProductsAppStack extends cdk.Stack {
             }    
         );
 
-        this.productsfetchHandler = new lambdaNodeJS.NodejsFunction(
+        this.productsFetchHandler = new lambdaNodeJS.NodejsFunction(
             this,
             'ProductsFetchFunction',
             {
@@ -110,7 +110,7 @@ export class ProductsAppStack extends cdk.Stack {
         );
         productsEventsHandler.grantInvoke(this.productsAdminHandler);
         
-        this.productsDdb.grantReadData(this.productsfetchHandler);
+        this.productsDdb.grantReadData(this.productsFetchHandler);
         this.productsDdb.grantWriteData(this.productsAdminHandler);
     }
 }

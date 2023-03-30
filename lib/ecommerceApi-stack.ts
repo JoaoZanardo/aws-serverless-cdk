@@ -7,6 +7,7 @@ import { Construct } from 'constructs';
 interface ECommerceApiStackProps extends cdk.StackProps {
     productsFetchHandler: lambdaNodeJS.NodejsFunction;
     productsAdminHandler: lambdaNodeJS.NodejsFunction;
+    ordersHandler: lambdaNodeJS.NodejsFunction;
 }
 
 export class ECommerceApiStack extends cdk.Stack {
@@ -37,6 +38,11 @@ export class ECommerceApiStack extends cdk.Stack {
             }
         );
 
+        this.createProductsService(props, api);
+        this.createOrdersService(props, api);
+    }
+
+    private createProductsService(props: ECommerceApiStackProps, api: apigateway.RestApi): void {
         const productsFetchIntegration = new apigateway.LambdaIntegration(props.productsFetchHandler);
         const productsAdminIntegration = new apigateway.LambdaIntegration(props.productsAdminHandler);
 
@@ -56,5 +62,34 @@ export class ECommerceApiStack extends cdk.Stack {
 
         // DELETE "/products/{id}"
         productIdResource.addMethod('DELETE', productsAdminIntegration);
+    }
+
+    private createOrdersService(props: ECommerceApiStackProps, api: apigateway.RestApi): void {
+        const orderIntegration = new apigateway.LambdaIntegration(props.ordersHandler);
+        const ordersResource = api.root.addResource('orders');
+
+        
+        // POST /orders
+        ordersResource.addMethod('POST', orderIntegration);
+
+        // GET /orders
+        // GET /orders?email=zanardo@gmail.com
+        // GET /orders?email=zanardo@gmail.com&orderId=123
+        ordersResource.addMethod('GET', orderIntegration);
+
+        const orderDeletationValidator = new apigateway.RequestValidator(this, 'OrderDeletationValidator', {
+            restApi: api,
+            requestValidatorName: 'OrderDeletationValidator',
+            validateRequestParameters: true
+        })
+
+        // DELETE /orders?email=zanardo@gmail.com&orderId=123
+        ordersResource.addMethod('DELETE', orderIntegration, {
+            requestParameters: {
+                'method.request.querystring.email': true,
+                'method.request.querystring.orderId': true,
+            },
+            requestValidator: orderDeletationValidator
+        });
     }
 }
