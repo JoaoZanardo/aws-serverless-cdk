@@ -46,12 +46,52 @@ export class ECommerceApiStack extends cdk.Stack {
         const productsFetchIntegration = new apigateway.LambdaIntegration(props.productsFetchHandler);
         const productsAdminIntegration = new apigateway.LambdaIntegration(props.productsAdminHandler);
 
-        // GET "/products"
         const productsResource = api.root.addResource('products');
+
+        // GET "/products"
         productsResource.addMethod('GET', productsFetchIntegration);
 
         // POST "/products"
-        productsResource.addMethod('POST', productsAdminIntegration);
+        const productRequestValidator = new apigateway.RequestValidator(this, 'ProductRequestValidator', {
+            restApi: api,
+            requestValidatorName: 'Product request validator',
+            validateRequestBody: true
+        });
+
+        const productModel = new apigateway.Model(this, 'ProductModel', {
+            restApi: api,
+            modelName: 'ProductModel',
+            contentType: 'application/json',
+            schema: {
+                properties: {
+                    model: {
+                        type: apigateway.JsonSchemaType.STRING
+                    },
+                    code: {
+                        type: apigateway.JsonSchemaType.STRING
+                    },
+                    price: {
+                        type: apigateway.JsonSchemaType.NUMBER
+                    },
+                    productName: {
+                        type: apigateway.JsonSchemaType.STRING
+                    }
+                },
+                required: [
+                    'model',
+                    'code',
+                    'price',
+                    'productName'
+                ]
+            }
+        });
+
+        productsResource.addMethod('POST', productsAdminIntegration, {
+            requestValidator: productRequestValidator,
+            requestModels: {
+                'application/json': productModel
+            }
+        });
 
         // GET "/products/{id}"
         const productIdResource  = productsResource.addResource('{id}');
@@ -68,22 +108,76 @@ export class ECommerceApiStack extends cdk.Stack {
         const orderIntegration = new apigateway.LambdaIntegration(props.ordersHandler);
         const ordersResource = api.root.addResource('orders');
 
-        
         // POST /orders
-        ordersResource.addMethod('POST', orderIntegration);
+        const orderRequestValidator = new apigateway.RequestValidator(this, 'OrderRequestValidator', {
+            restApi: api,
+            validateRequestBody: true,
+            requestValidatorName: 'Order request validator'
+        });
+
+        const orderModel = new apigateway.Model(this, 'OrderModel', {
+            restApi: api,
+            modelName: 'OrderModel',
+            contentType: 'application/json',
+            schema: {
+                type: apigateway.JsonSchemaType.OBJECT,
+                properties: {
+                    email: {
+                        type: apigateway.JsonSchemaType.STRING
+                    },
+                    productIds: {
+                        type: apigateway.JsonSchemaType.ARRAY,
+                        minItems: 1,
+                        items: {
+                            type: apigateway.JsonSchemaType.STRING
+                        }
+                    },
+                    payment: {
+                        type: apigateway.JsonSchemaType.STRING,
+                        enum: ['CASH', 'CREDIT_CARD', 'DEBIT_CARD']
+                    },
+                    shipping: {
+                        type: apigateway.JsonSchemaType.OBJECT,
+                        properties: {
+                            type: {
+                                type: apigateway.JsonSchemaType.STRING,
+                                enum: ['URGENT', 'ECONOMIC']
+                            },
+                            carrier: {
+                                type: apigateway.JsonSchemaType.STRING,
+                                enum: ['FEDEX', 'CORREIOS']
+                            }
+                        }
+                    }
+                },
+                required: [
+                    'email',
+                    'productIds',
+                    'payment',
+                    'shipping'
+                ]
+            }   
+        });
+
+        ordersResource.addMethod('POST', orderIntegration, {
+            requestValidator: orderRequestValidator,
+            requestModels: {
+                'application/json': orderModel
+            }
+        });
 
         // GET /orders
         // GET /orders?email=zanardo@gmail.com
         // GET /orders?email=zanardo@gmail.com&orderId=123
         ordersResource.addMethod('GET', orderIntegration);
 
+        // DELETE /orders?email=zanardo@gmail.com&orderId=123
         const orderDeletationValidator = new apigateway.RequestValidator(this, 'OrderDeletationValidator', {
             restApi: api,
             requestValidatorName: 'OrderDeletationValidator',
             validateRequestParameters: true
-        })
+        });
 
-        // DELETE /orders?email=zanardo@gmail.com&orderId=123
         ordersResource.addMethod('DELETE', orderIntegration, {
             requestParameters: {
                 'method.request.querystring.email': true,

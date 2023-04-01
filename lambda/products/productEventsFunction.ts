@@ -34,7 +34,7 @@ export async function createEvent(event: ProductEvent)
             pk: `#product_${event.productCode}`,
             sk: `${event.eventType}#${timeStamp}`,
             email: event.email,
-            createdAt: timeStamp,
+            created_at: timeStamp,
             requestId: event.requestId,
             eventType: event.eventType,
             ttl

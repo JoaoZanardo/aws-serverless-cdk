@@ -1,5 +1,4 @@
 import { DynamoDB } from "aws-sdk";
-import { v4 as uuid } from 'uuid';
 
 export interface OrderProduct {
     price: number;
@@ -8,8 +7,8 @@ export interface OrderProduct {
 
 export interface Order {
     pk: string;
-    sk?: string;
-    created_at?: number,
+    sk: string;
+    created_at: number,
     shipping: {
         type: 'URGENT' | 'ECONOMIC',
         carrier: 'CORREIOS' | 'FEDEX',
@@ -28,8 +27,6 @@ export class OrderRepository {
     ) { }
 
     async create(order: Order): Promise<Order> {
-        order.created_at = Date.now();
-        order.sk = uuid();
 
         await this.ddbClient.put({
             TableName: this.ordersDdb,
