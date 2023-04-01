@@ -166,7 +166,13 @@ function sendOrderEvent(order: Order, eventType: OrderEventType, requestId: stri
     }
     return snsClient.publish({
         TopicArn: orderEventsTopicArn,
-        Message: JSON.stringify(envelope),    
+        Message: JSON.stringify(envelope), 
+        MessageAttributes: {
+            eventType: {
+                DataType: 'String',
+                StringValue: eventType
+            }
+        }   
     }).promise();
 }
 
