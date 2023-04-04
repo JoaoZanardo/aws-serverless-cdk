@@ -170,8 +170,17 @@ export class OrdersAppStack extends cdk.Stack {
             insightsVersion: lambda.LambdaInsightsVersion.VERSION_1_0_119_0
         }); 
 
+        const orderEventsDlq = new sqs.Queue(this, 'OrderEventsDlq', {
+            queueName: 'order-events-dlq',
+            retentionPeriod: cdk.Duration.days(10)
+        });
+
         const orderEventsQueue = new sqs.Queue(this, 'OrderEventsQueue', {
-            queueName: 'order-events'
+            queueName: 'order-events',
+            deadLetterQueue: {
+                queue: orderEventsDlq,
+                maxReceiveCount: 3
+            }
         });
 
         ordersTopic.addSubscription(new subs.SqsSubscription(orderEventsQueue, {
