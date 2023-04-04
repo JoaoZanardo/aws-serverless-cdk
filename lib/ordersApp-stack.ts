@@ -7,6 +7,8 @@ import * as lambdaNodeJS from 'aws-cdk-lib/aws-lambda-nodejs';
 import * as sns from 'aws-cdk-lib/aws-sns';
 import * as subs from 'aws-cdk-lib/aws-sns-subscriptions';
 import * as iam from 'aws-cdk-lib/aws-iam';
+import * as sqs from 'aws-cdk-lib/aws-sqs';
+import * as lambdaEventResource from 'aws-cdk-lib/aws-lambda-event-sources';
 
 export interface OrdersAppStackProps extends cdk.StackProps {
     productsDdb: dynamodb.Table;
@@ -152,5 +154,39 @@ export class OrdersAppStack extends cdk.Stack {
                 })
             }
         }));
+
+        const orderEmailhandler = new lambdaNodeJS.NodejsFunction(this, 'OrderEmailFunction', {
+            functionName: 'OrderEmailFunction',
+            entry: 'lambda/orders/orderEmailFunction.ts',
+            handler: 'handler',
+            memorySize: 128,
+            timeout: cdk.Duration.seconds(2),
+            bundling: {
+                minify: true,
+                sourceMap: false
+            },
+            layers: [orderEventsLayer],
+            tracing: lambda.Tracing.ACTIVE,
+            insightsVersion: lambda.LambdaInsightsVersion.VERSION_1_0_119_0
+        }); 
+
+        const orderEventsQueue = new sqs.Queue(this, 'OrderEventsQueue', {
+            queueName: 'order-events'
+        });
+
+        ordersTopic.addSubscription(new subs.SqsSubscription(orderEventsQueue, {
+            filterPolicy: {
+                eventType: sns.SubscriptionFilter.stringFilter({
+                        allowlist: ['ORDER_CREATED']
+                })
+            }
+        }));
+        orderEmailhandler.addEventSource(new lambdaEventResource.SqsEventSource(orderEventsQueue, {
+            batchSize: 3,
+            enabled: true,
+            maxBatchingWindow: cdk.Duration.minutes(1)
+        }));
+        orderEventsQueue.grantConsumeMessages(orderEmailhandler);
+
     }
 }
