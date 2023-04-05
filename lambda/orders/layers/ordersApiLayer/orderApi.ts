@@ -42,5 +42,5 @@ export interface orderResponse {
     created_at: number;
     shipping: OrderShipping;
     billing: OrderBilling;
-    products: OrderProduct[];
+    products?: OrderProduct[];
 }

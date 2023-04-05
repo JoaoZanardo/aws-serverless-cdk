@@ -147,7 +147,7 @@ export async function handler(
 
 function sendOrderEvent(order: Order, eventType: OrderEventType, requestId: string) {
     const productsCode: string[] = [];  
-    order.products.map(product => {
+    order.products!.map(product => {
         productsCode.push(product.code);
     });
 
@@ -214,8 +214,8 @@ function converToOrderResponse(order: Order): orderResponse {
             payment: order.billing.payment as PaymentType,
             totalPrice: order.billing.totalPrice
         },
-        products: order.products.map(product => {
+        products: order.products ? order.products.map(product => {
             return product;
-        })
+        }) : undefined
     }
 }
